@@ -1,0 +1,25 @@
+{
+  "name": "InfiniteFrontier",
+  "version": "0.0.0",
+  "authors": [
+    "Jordan Foreman <thejordanforeman@gmail.com>"
+  ],
+  "description": "Sci-Fi MMORPG for Desktop Browsers",
+  "main": "server.js",
+  "moduleType": [
+    "node"
+  ],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "phaser": "~2.1.3",
+    "phaser-plugin-isometric": "https://github.com/lewster32/phaser-plugin-isometric.git"
+  }
+}

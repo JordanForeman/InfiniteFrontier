@@ -1,0 +1,14 @@
+{
+  "name": "InfiniteFrontier",
+  "version": "0.0.0",
+  "description": "Sci-Fi MMORPG for Desktop Browsers",
+  "main": "server.js",
+  "scripts": {
+    "test": "test"
+  },
+  "author": "Jordan Foreman",
+  "license": "ISC",
+  "devDependencies": {
+    "grunt": "^0.4.5"
+  }
+}
