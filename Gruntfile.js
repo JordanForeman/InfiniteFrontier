@@ -7,7 +7,15 @@ module.exports = function(grunt) {
 		watch: {
 			scripts: {
 				files: ['public/js/**/*.js', '!public/js/build/*.js'],
-				tasks: ['concat']
+				tasks: ['concat', 'uglify']
+			}
+		},
+
+		uglify: {
+			build: {
+				files: {
+					'public/js/build/<%= pkg.name %>-<%= pkg.version %>.min.js': 'public/js/build/<%= pkg.name %>-<%= pkg.version %>.js'
+				}
 			}
 		},
 
@@ -32,8 +40,9 @@ module.exports = function(grunt) {
 
 	grunt.loadNpmTasks('grunt-contrib-concat');
 	grunt.loadNpmTasks('grunt-contrib-watch');
+	grunt.loadNpmTasks('grunt-contrib-uglify');
 
-	grunt.registerTask('default', ['concat']);
-	grunt.registerTask('local', ['concat', 'watch']);
+	grunt.registerTask('default', ['concat', 'uglify']);
+	grunt.registerTask('local', ['concat', 'uglify', 'watch']);
 
 };
