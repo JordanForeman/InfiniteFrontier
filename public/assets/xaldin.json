@@ -1,0 +1,13 @@
+{
+	"frames": {
+	},
+
+	"meta": {
+		"app": "",
+		"version": "1.0",
+		"image": "xaldin.png",
+		"format": "RGBA5551",
+		"size": {"w":256,"h":256},
+		"scale": "1"
+	}
+}
