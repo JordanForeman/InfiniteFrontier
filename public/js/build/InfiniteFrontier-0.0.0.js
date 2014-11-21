@@ -87764,6 +87764,23 @@ window.app = window.app || {};
 app.Events = {};
 app.Views = {};
 
+app.Constants = {
+
+	// Sprite Directions
+	DIRECTION_FORWARD: "forward",
+	DIRECTION_FORWARD_LEFT: "forward-left",
+	DIRECTION_LEFT: "left",
+	DIRECTION_AWAY_LEFT: "away-left",
+	DIRECTION_AWAY: "away",
+	DIRECTION_AWAY_RIGHT: "away-right",
+	DIRECTION_RIGHT: "right",
+	DIRECTION_FORWARD_RIGHT: "forward-right",
+
+	// Tile Constants
+	TILE_WIDTH: 32
+
+};
+
 app.Controller = {
 
 	cursors: null,
@@ -87824,12 +87841,18 @@ app.Controller = {
 
 app.Player = {
 
+	game: null,
+	isoGroup: null,
 	gameObject: null,
-	speed: 100,
+	speed: 200,
+
+	currentDirection: app.Constants.DIRECTION_FORWARD_LEFT,
 
 	init: function(game, isoGroup) {
 		// Create another cube as our 'player', and set it up just like the cubes above.
-		this.gameObject = game.add.isoSprite(128, 128, 128, 'cube', 0, isoGroup);
+		this.game = game;
+		this.isoGroup = isoGroup;
+		this.gameObject = this.game.add.isoSprite(128, 128, 128, 'character', this.currentDirection, this.isoGroup);
 		this.gameObject.tint = 0x86bfda;
 		this.gameObject.anchor.set(0.5);
 		game.physics.isoArcade.enable(this.gameObject);
@@ -87842,12 +87865,30 @@ app.Player = {
 
 	addListeners: function() {
 		app.Events.on('keypress', this.inputHandler.bind(this));
+		app.Events.on('keypress', this.updateCurrentDirection.bind(this));
 		app.Events.on('no-keypress', this.noKeyPressHandler.bind(this));
 	},
 
 	noKeyPressHandler: function() {
 		this.gameObject.body.velocity.y = 0;
 		this.gameObject.body.velocity.x = 0;
+	},
+
+	updateCurrentDirection: function(keyCode) {
+
+		var currentDirection = this.currentDirection;
+
+		if (keyCode == 'up')
+			this.currentDirection = app.Constants.DIRECTION_AWAY_RIGHT;
+		if (keyCode == 'down')
+			this.currentDirection = app.Constants.DIRECTION_FORWARD_LEFT;
+		if (keyCode == 'left')
+			this.currentDirection = app.Constants.DIRECTION_AWAY_LEFT;
+		if (keyCode == 'right')
+			this.currentDirection = app.Constants.DIRECTION_FORWARD_RIGHT;
+
+		this.gameObject.setFrame(this.currentDirection);
+
 	},
 
 	inputHandler: function(keyCode) {
@@ -87899,6 +87940,11 @@ app.Views.InitialView = function(game) {
 	this.controller = null;
 	this.isoGroup = null;
 	this.water = [];
+
+	this.gameBounds = {
+		height: 2048,
+		width: 1024
+	}
 };
 
 app.Views.InitialView.prototype = {
@@ -87914,6 +87960,9 @@ app.Views.InitialView.prototype = {
 		this.game.plugins.add(isoPlugin);
 
 		this.loadAssets();
+
+		// In order to have the camera move, we need to increase the size of our world bounds.
+        this.game.world.setBounds(0, 0, this.gameBounds.height, this.gameBounds.width);
 
 		this.game.physics.startSystem(Phaser.Plugin.Isometric.ISOARCADE);
 		this.game.iso.anchor.setTo(0.5, 0.1);
@@ -87933,6 +87982,7 @@ app.Views.InitialView.prototype = {
 		this.createTiles();
 
 		this.player = app.Player.init(this.game, this.isoGroup);
+		this.game.camera.follow(this.player);
 	},
 
 	update: function() {
@@ -87944,7 +87994,7 @@ app.Views.InitialView.prototype = {
 		// determined from the 2D pointer position without extra trickery. By default, the z position is 0 if not set.
 		game.iso.unproject(game.input.activePointer.position, this.controller.cursorPos);
 
-		this.animateWater();
+		// this.animateWater();
 
 		this.controller.checkInputs();
 
@@ -87969,78 +88019,73 @@ app.Views.InitialView.prototype = {
 		// Load assets
 		this.game.load.image('cube', '/assets/cube.png');
 		this.game.load.atlasJSONHash('tileset', '/assets/tileset.png', '/assets/tileset.json');
-		this.game.load.atlasJSONHash('xaldin', '/assets/xaldin.png', '/assets/xaldin.json');
+		this.game.load.atlasJSONHash('character', '/assets/character.png', '/assets/character.json');
+	},
+
+	generateRandomMap: function(tileArray) {
+		var array = [];
+
+		var hVar = this.gameBounds.height / app.Constants.TILE_WIDTH,
+			wVar = this.gameBounds.width / app.Constants.TILE_WIDTH;
+
+
+		for (var h = 0; h < hVar; h++) {
+			for (var w = 0; w < wVar; w++) {
+				var tileType = Math.floor(Math.random()*(tileArray.length));
+				array.push(tileType);
+			}
+		}
+
+		return array;
 	},
 
 	createTiles: function() {
 
-		var tileArray = [];
-		tileArray[0] = 'water';
-		tileArray[1] = 'sand';
-		tileArray[2] = 'grass';
-		tileArray[3] = 'stone';
-		tileArray[4] = 'wood';
-		tileArray[5] = 'watersand';
-		tileArray[6] = 'grasssand';
-		tileArray[7] = 'sandstone';
-		tileArray[8] = 'bush1';
-		tileArray[9] = 'bush2';
-		tileArray[10] = 'mushroom';
-		tileArray[11] = 'wall';
-		tileArray[12] = 'window';
-		tileArray[13] = 'wireframe';
+		var tileArray = ['grass', 'bush1', 'bush2', 'mushroom'];
+		// tileArray[0] = 'water';
+		// tileArray[1] = 'sand';
+		// tileArray[2] = 'grass';
+		// tileArray[3] = 'stone';
+		// tileArray[4] = 'wood';
+		// tileArray[5] = 'watersand';
+		// tileArray[6] = 'grasssand';
+		// tileArray[7] = 'sandstone';
+		// tileArray[8] = 'bush1';
+		// tileArray[9] = 'bush2';
+		// tileArray[10] = 'mushroom';
+		// tileArray[11] = 'wall';
+		// tileArray[12] = 'window';
+		// tileArray[13] = 'wireframe';
 
-		var tiles = [
-			9, 2, 1, 1, 4, 4, 1, 6, 2, 10, 2,
-			2, 6, 1, 0, 4, 4, 0, 0, 2, 2, 2,
-			6, 1, 0, 0, 4, 4, 0, 0, 8, 8, 2,
-			0, 0, 0, 0, 4, 4, 0, 0, 0, 9, 2,
-			0, 0, 0, 0, 4, 4, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 4, 4, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 4, 4, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 4, 4, 0, 0, 0, 0, 0,
-			11, 11, 12, 11, 3, 3, 11, 12, 11, 11, 11,
-			3, 7, 3, 3, 3, 3, 3, 3, 7, 3, 3,
-			7, 1, 7, 7, 3, 3, 7, 7, 1, 1, 7
-		];
+		var tiles = this.generateRandomMap(tileArray),
+			size = app.Constants.TILE_WIDTH,
+			i = 0, 
+			tile,
+			y_bounds = this.game.physics.isoArcade.bounds.frontY - size,
+			x_bounds = this.game.physics.isoArcade.bounds.frontX - size;
 
-		var xtiles = [
-			13,13,13,13,13,13,13,13,13,13,13,
-			13,13,13,13,13,13,13,13,13,13,13,
-			13,13,13,13,13,13,13,13,13,13,13,
-			13,13,13,13,13,13,13,13,13,13,13,
-			13,13,13,13,13,13,13,13,13,13,13,
-			13,13,13,13,13,13,13,13,13,13,13,
-			13,13,13,13,13,13,13,13,13,13,13,
-			13,13,13,13,13,13,13,13,13,13,13,
-			13,13,13,13,13,13,13,13,13,13,13,
-			13,13,13,13,13,13,13,13,13,13,13,
-			13,13,13,13,13,13,13,13,13,13,13
-		];
+		for (var y = size; y <= y_bounds; y += size) {
+			for (var x = size; x <= x_bounds; x += size) {
 
-		var size = 32;
-
-		var i = 0, tile;
-		for (var y = size; y <= this.game.physics.isoArcade.bounds.frontY - size; y += size) {
-			for (var x = size; x <= this.game.physics.isoArcade.bounds.frontX - size; x += size) {
 				// this bit would've been so much cleaner if I'd ordered the tileArray better, but I can't be bothered fixing it :P
-				tile = this.game.add.isoSprite(
-										x, y, 
-										tileArray[tiles[i]].match("water") ? 0 : this.game.rnd.pick([2, 3, 4]), 
-										'tileset', tileArray[tiles[i]], this.isoGroup);
-				
+				tile = this.game.add.isoSprite(x, y, 0, 'tileset', tileArray[tiles[i]], this.isoGroup);
 				tile.anchor.set(0.5, 1);
 				tile.smoothed = false;
 				tile.body.moves = false;
-				if (tiles[i] === 4) {
-					tile.isoZ += 6;
-				}
-				if (tiles[i] <= 10 && (tiles[i] < 5 || tiles[i] > 6)) {
-					tile.scale.x = this.game.rnd.pick([-1, 1]);
-				}
-				if (tiles[i] === 0) {
-					this.water.push(tile);
-				}
+				
+				// FIXME: Bridge is 6 units above level
+				// if (tiles[i] === 4)
+				// 	tile.isoZ += 6;
+
+				// FIXME: Scale stuff?
+				// if (tiles[i] <= 10 && (tiles[i] < 5 || tiles[i] > 6))
+				// 	tile.scale.x = this.game.rnd.pick([-1, 1]);
+
+				// TODO: uncomment this once map is finished
+				// Add water tile to list of tiles to update for water
+				// if (tiles[i] === 0)
+				// 	this.water.push(tile);
+
 				i++;
 			}
 		}
@@ -88082,7 +88127,8 @@ app.Game = {
 	game: null,
 
 	init: function() {
-		this.game = new Phaser.Game(800, 400, Phaser.AUTO, 'test', null, true, false);
+
+		this.game = new Phaser.Game(window.screen.availWidth, window.screen.availHeight, Phaser.AUTO, 'test', null, true, false);
 		
 		this.addGameStates();
 

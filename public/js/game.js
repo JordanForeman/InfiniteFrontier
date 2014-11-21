@@ -3,7 +3,8 @@ app.Game = {
 	game: null,
 
 	init: function() {
-		this.game = new Phaser.Game(800, 400, Phaser.AUTO, 'test', null, true, false);
+
+		this.game = new Phaser.Game(window.screen.availWidth, window.screen.availHeight, Phaser.AUTO, 'test', null, true, false);
 		
 		this.addGameStates();
 
