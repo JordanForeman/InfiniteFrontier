@@ -22,8 +22,6 @@ module.exports = function(grunt) {
 		concat: {
 			dist: {
 				src: [
-					'public/bower_components/phaser/build/phaser.js',
-					'public/bower_components/phaser-plugin-isometric/dist/phaser-plugin-isometric.js',
 					'public/js/core.js',
 					'public/js/const.js',
 					'public/js/Controller.js',
