@@ -17,4 +17,4 @@ $ cd ..
 $ grunt
 ```
 
-To start the game server, simply run `node server.js`
+To start the game server, simply run `node server.js` and visit `localhost:3000` in the browser of your choice.
