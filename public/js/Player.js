@@ -1,72 +1,37 @@
-app.Player = {
+app.Player = function(game) {
 
-	game: null,
-	isoGroup: null,
-	gameObject: null,
-	speed: 200,
+	this.game = game;
+	this.speed = 200;
+	this.gameObject = this.game.add.sprite(this.game.world.centerX, 
+											this.game.world.centerY, 
+											'player');
+	this.gameObject.tint = 0x86bfda;
+	this.gameObject.anchor.setTo(0.5, 0.5);
 
-	currentDirection: app.Constants.DIRECTION_FORWARD_LEFT,
+	this.addListeners();
+};
 
-	init: function(game, isoGroup) {
-		// Create another cube as our 'player', and set it up just like the cubes above.
-		this.game = game;
-		this.isoGroup = isoGroup;
-		this.gameObject = this.game.add.isoSprite(128, 128, 128, 'character', this.currentDirection, this.isoGroup);
-		this.gameObject.tint = 0x86bfda;
-		this.gameObject.anchor.set(0.5);
-		game.physics.isoArcade.enable(this.gameObject);
-		this.gameObject.body.collideWorldBounds = true;
+app.Player.prototype.addListeners = function() {
+	app.Events.on('keypress', this.inputHandler.bind(this));
+};
 
-		this.addListeners();
+app.Player.prototype.stop = function() {
+	var currXVelocity = this.gameObject.body.velocity.x;
+	if (currXVelocity <= 0) return;
 
-		return this.gameObject;
-	},
+	var newXVelocity = currXVelocity - (this.speed / 10);
+	this.gameObject.body.velocity.x = newXVelocity;
+};
 
-	addListeners: function() {
-		app.Events.on('keypress', this.inputHandler.bind(this));
-		app.Events.on('keypress', this.updateCurrentDirection.bind(this));
-		app.Events.on('no-keypress', this.noKeyPressHandler.bind(this));
-	},
+app.Player.prototype.inputHandler = function(keyCode) {
 
-	noKeyPressHandler: function() {
-		this.gameObject.body.velocity.y = 0;
-		this.gameObject.body.velocity.x = 0;
-	},
-
-	updateCurrentDirection: function(keyCode) {
-
-		var currentDirection = this.currentDirection;
-
-		if (keyCode == 'up')
-			this.currentDirection = app.Constants.DIRECTION_AWAY_RIGHT;
-		if (keyCode == 'down')
-			this.currentDirection = app.Constants.DIRECTION_FORWARD_LEFT;
-		if (keyCode == 'left')
-			this.currentDirection = app.Constants.DIRECTION_AWAY_LEFT;
-		if (keyCode == 'right')
-			this.currentDirection = app.Constants.DIRECTION_FORWARD_RIGHT;
-
-		this.gameObject.setFrame(this.currentDirection);
-
-	},
-
-	inputHandler: function(keyCode) {
-
-		if (keyCode == 'space') {
-			this.gameObject.body.velocity.z = 300;
-		}
-
-		if (keyCode == 'up') {
-			this.gameObject.body.velocity.y = -this.speed;
-		} else if (keyCode == 'down') {
-			this.gameObject.body.velocity.y = this.speed;
-		}
-
-		if (keyCode == 'left') {
-			this.gameObject.body.velocity.x = -this.speed;
-		} else if (keyCode == 'right') {
-			this.gameObject.body.velocity.x = this.speed;
-		}
+	if (keyCode == 'up' || keyCode == 'space' && this.gameObject.body.touching.down) {
+		this.gameObject.body.velocity.y = -320;
 	}
 
+	if (keyCode == 'left') {
+		this.gameObject.body.velocity.x = -this.speed;
+	} else if (keyCode == 'right') {
+		this.gameObject.body.velocity.x = this.speed;
+	}
 };

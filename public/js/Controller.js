@@ -1,14 +1,12 @@
 app.Controller = {
 
 	cursors: null,
-	cursorPos: null,
 	game: null,
 
 	init: function(game) {
 		// Set up our controls.
 		this.game = game;
 		this.cursors = this.game.input.keyboard.createCursorKeys();
-		this.cursorPos = new Phaser.Plugin.Isometric.Point3();
 
 		this.game.input.keyboard.addKeyCapture([
 			Phaser.Keyboard.LEFT,
@@ -27,6 +25,7 @@ app.Controller = {
 	},
 
 	checkInputs: function() {
+
 		var inputData = null,
 			keypressed = false;
 
@@ -49,8 +48,8 @@ app.Controller = {
 
 		if (keypressed)
 			app.Events.trigger('keypress', inputData);
-		else
-			app.Events.trigger('no-keypress');
+
+		return keypressed;
 
 	},
 
