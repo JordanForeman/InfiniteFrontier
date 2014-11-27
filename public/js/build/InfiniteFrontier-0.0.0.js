@@ -2,6 +2,45 @@ window.app = window.app || {};
 app.Events = {};
 app.Views = {};
 
+app.Player = function(game) {
+
+	this.game = game;
+	this.speed = 200;
+	this.fireRate = 100;
+	this.gameObject = this.game.add.sprite(this.game.world.centerX, 
+											this.game.world.centerY, 
+											'player');
+	this.gameObject.tint = 0x86bfda;
+	this.gameObject.anchor.setTo(0.5, 0.5);
+
+	this.addListeners();
+};
+
+app.Player.prototype.addListeners = function() {
+	app.Events.on('keypress', this.inputHandler.bind(this));
+};
+
+app.Player.prototype.stop = function() {
+	var currXVelocity = this.gameObject.body.velocity.x;
+	if (currXVelocity <= 0) return;
+
+	var newXVelocity = currXVelocity - (this.speed / 10);
+	this.gameObject.body.velocity.x = newXVelocity;
+};
+
+app.Player.prototype.inputHandler = function(keyCode) {
+
+	if (keyCode == 'up' || keyCode == 'space' && this.gameObject.body.touching.down) {
+		this.gameObject.body.velocity.y = -320;
+	}
+
+	if (keyCode == 'left') {
+		this.gameObject.body.velocity.x = -this.speed;
+	} else if (keyCode == 'right') {
+		this.gameObject.body.velocity.x = this.speed;
+	}
+};
+
 app.Constants = {
 
 	// Sprite Directions
@@ -76,44 +115,6 @@ app.Controller = {
 
 };
 
-app.Player = function(game) {
-
-	this.game = game;
-	this.speed = 200;
-	this.gameObject = this.game.add.sprite(this.game.world.centerX, 
-											this.game.world.centerY, 
-											'player');
-	this.gameObject.tint = 0x86bfda;
-	this.gameObject.anchor.setTo(0.5, 0.5);
-
-	this.addListeners();
-};
-
-app.Player.prototype.addListeners = function() {
-	app.Events.on('keypress', this.inputHandler.bind(this));
-};
-
-app.Player.prototype.stop = function() {
-	var currXVelocity = this.gameObject.body.velocity.x;
-	if (currXVelocity <= 0) return;
-
-	var newXVelocity = currXVelocity - (this.speed / 10);
-	this.gameObject.body.velocity.x = newXVelocity;
-};
-
-app.Player.prototype.inputHandler = function(keyCode) {
-
-	if (keyCode == 'up' || keyCode == 'space' && this.gameObject.body.touching.down) {
-		this.gameObject.body.velocity.y = -320;
-	}
-
-	if (keyCode == 'left') {
-		this.gameObject.body.velocity.x = -this.speed;
-	} else if (keyCode == 'right') {
-		this.gameObject.body.velocity.x = this.speed;
-	}
-};
-
 app.Events = {
 
 	events: {},
@@ -141,8 +142,10 @@ app.Views.InitialView = function(game) {
 	this.game = game;
 	this.controller = null;
 	this.walls = null;
+	this.bulletCache = null;
 	this.water = [];
 	this.physicsBodies = [];
+	this.nextFire = 0;
 
 	this.gameBounds = {
 		height: 2048,
@@ -169,6 +172,7 @@ app.Views.InitialView.prototype = {
 	create: function() {
 		this.controller = app.Controller.init(this.game);
 		this.createEnvironment();
+		this.createBulletCache();
 		this.createPlayer();
 	},
 
@@ -179,7 +183,12 @@ app.Views.InitialView.prototype = {
 		if (!keypressed)
 			this.player.stop();
 
+		if (game.input.activePointer.isDown) {
+			this.fireBullets();
+		}
+
 		game.physics.arcade.collide(this.player.gameObject, this.walls);
+		game.physics.arcade.collide(this.bulletCache, this.walls, this.bulletHitWall);
 	},
 
 	render: function() {
@@ -195,6 +204,7 @@ app.Views.InitialView.prototype = {
 		this.game.load.image('player', '/assets/player.png');
 		this.game.load.image('wallV', '/assets/wallVertical.png');
 		this.game.load.image('wallH', '/assets/wallHorizontal.png');
+		this.game.load.image('bullet', '/assets/bullet.png');
 	},
 
 	createEnvironment: function() {
@@ -223,11 +233,35 @@ app.Views.InitialView.prototype = {
 		game.stage.backgroundColor = '#3498db';
 	},
 
+	createBulletCache: function() {
+		this.bulletCache = this.game.add.group();
+		this.bulletCache.enableBody = true;
+		this.bulletCache.physicsBodyType = Phaser.Physics.ARCADE;
+
+		this.bulletCache.createMultiple(50, 'bullet');
+		this.bulletCache.setAll('checkWorldBounds', true);
+		this.bulletCache.setAll('outOfBoundsKill', true);
+	},
+
+	fireBullets: function() {
+		if (this.game.time.now > this.nextFire && this.bulletCache.countDead() > 0) {
+			this.nextFire = this.game.time.now + this.player.fireRate;
+			var bullet = this.bulletCache.getFirstDead();
+			bullet.reset(this.player.gameObject.x, this.player.gameObject.y);
+			bullet.rotation = this.game.physics.arcade.angleToPointer(bullet);
+			this.game.physics.arcade.moveToPointer(bullet, 300);
+		}
+	},
+
 	createPlayer: function() {
 		this.player = new app.Player(this.game);
 		this.game.physics.arcade.enable(this.player.gameObject);
 		this.player.gameObject.body.gravity.y = 500;
 		this.game.camera.follow(this.player.gameObject);
+	},
+
+	bulletHitWall: function(bullet, wall) {
+		bullet.kill();
 	},
 
 	checkMouse: function() {

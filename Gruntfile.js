@@ -23,9 +23,9 @@ module.exports = function(grunt) {
 			dist: {
 				src: [
 					'public/js/core.js',
+					'public/js/entities/*.js',
 					'public/js/const.js',
 					'public/js/Controller.js',
-					'public/js/Player.js',
 					'public/js/events/*.js',
 					'public/js/views/*.js',
 					'public/js/game.js'

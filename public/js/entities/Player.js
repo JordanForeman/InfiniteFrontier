@@ -2,6 +2,7 @@ app.Player = function(game) {
 
 	this.game = game;
 	this.speed = 200;
+	this.fireRate = 100;
 	this.gameObject = this.game.add.sprite(this.game.world.centerX, 
 											this.game.world.centerY, 
 											'player');
