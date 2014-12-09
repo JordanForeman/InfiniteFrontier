@@ -1,3 +1,83 @@
+window.app = window.app || {};
+app.Events = {};
+app.Views = {};
+
+app.Client = app.Client || {};
+app.Client.InstanceManager = function() {
+
+	this.socket = io();
+
+	var playerId, instanceId;
+
+	this.socket.on('connection-accept', function(data){
+		playerId = data.pid;
+		instanceId = data.iid;
+		console.log("Player ID: " + playerId);
+		console.log("Instance ID: " + instanceId);
+	});
+
+	app.Events.on('keypress', function(action){
+		var data = {action: action, pid: playerId};
+		this.socket.emit('keypress', data);
+	}.bind(this));
+
+};
+app.Player = function(game) {
+
+	this.game = game;
+	this.speed = 200;
+	this.fireRate = 100;
+	this.gameObject = this.game.add.sprite(this.game.world.centerX, 
+											this.game.world.centerY, 
+											'player');
+	this.gameObject.tint = 0x86bfda;
+	this.gameObject.anchor.setTo(0.5, 0.5);
+
+	this.addListeners();
+};
+
+app.Player.prototype.addListeners = function() {
+	app.Events.on('keypress', this.inputHandler.bind(this));
+};
+
+app.Player.prototype.stop = function() {
+	var currXVelocity = this.gameObject.body.velocity.x;
+	if (currXVelocity <= 0) return;
+
+	var newXVelocity = currXVelocity - (this.speed / 10);
+	this.gameObject.body.velocity.x = newXVelocity;
+};
+
+app.Player.prototype.inputHandler = function(keyCode) {
+
+	if (keyCode == 'up' || keyCode == 'space' && this.gameObject.body.touching.down) {
+		this.gameObject.body.velocity.y = -320;
+	}
+
+	if (keyCode == 'left') {
+		this.gameObject.body.velocity.x = -this.speed;
+	} else if (keyCode == 'right') {
+		this.gameObject.body.velocity.x = this.speed;
+	}
+};
+
+app.Constants = {
+
+	// Sprite Directions
+	DIRECTION_FORWARD: "forward",
+	DIRECTION_FORWARD_LEFT: "forward-left",
+	DIRECTION_LEFT: "left",
+	DIRECTION_AWAY_LEFT: "away-left",
+	DIRECTION_AWAY: "away",
+	DIRECTION_AWAY_RIGHT: "away-right",
+	DIRECTION_RIGHT: "right",
+	DIRECTION_FORWARD_RIGHT: "forward-right",
+
+	// Tile Constants
+	TILE_WIDTH: 32
+
+};
+
 app.Controller = {
 
 	cursors: null,
@@ -55,73 +135,6 @@ app.Controller = {
 
 };
 
-app.Client = app.Client || {};
-app.Client.InstanceManager = function() {
-
-	this.socket = io();
-	console.log(this.socket);
-
-};
-app.Constants = {
-
-	// Sprite Directions
-	DIRECTION_FORWARD: "forward",
-	DIRECTION_FORWARD_LEFT: "forward-left",
-	DIRECTION_LEFT: "left",
-	DIRECTION_AWAY_LEFT: "away-left",
-	DIRECTION_AWAY: "away",
-	DIRECTION_AWAY_RIGHT: "away-right",
-	DIRECTION_RIGHT: "right",
-	DIRECTION_FORWARD_RIGHT: "forward-right",
-
-	// Tile Constants
-	TILE_WIDTH: 32
-
-};
-
-window.app = window.app || {};
-app.Events = {};
-app.Views = {};
-
-app.Player = function(game) {
-
-	this.game = game;
-	this.speed = 200;
-	this.fireRate = 100;
-	this.gameObject = this.game.add.sprite(this.game.world.centerX, 
-											this.game.world.centerY, 
-											'player');
-	this.gameObject.tint = 0x86bfda;
-	this.gameObject.anchor.setTo(0.5, 0.5);
-
-	this.addListeners();
-};
-
-app.Player.prototype.addListeners = function() {
-	app.Events.on('keypress', this.inputHandler.bind(this));
-};
-
-app.Player.prototype.stop = function() {
-	var currXVelocity = this.gameObject.body.velocity.x;
-	if (currXVelocity <= 0) return;
-
-	var newXVelocity = currXVelocity - (this.speed / 10);
-	this.gameObject.body.velocity.x = newXVelocity;
-};
-
-app.Player.prototype.inputHandler = function(keyCode) {
-
-	if (keyCode == 'up' || keyCode == 'space' && this.gameObject.body.touching.down) {
-		this.gameObject.body.velocity.y = -320;
-	}
-
-	if (keyCode == 'left') {
-		this.gameObject.body.velocity.x = -this.speed;
-	} else if (keyCode == 'right') {
-		this.gameObject.body.velocity.x = this.speed;
-	}
-};
-
 app.Events = {
 
 	events: {},
@@ -144,29 +157,6 @@ app.Events = {
 	}
 
 };
-
-app.Game = {
-
-	game: null,
-
-	init: function() {
-		this.game = new Phaser.Game(500, 340, Phaser.AUTO, 'test', null, true, false);
-		this.addGameStates();
-		this.startGame();
-	},
-
-	addGameStates: function() {
-		var initialView = new app.Views.InitialView(this.game);
-		this.game.state.add('start', initialView);
-	},
-
-	startGame: function() {
-		this.game.state.start('start');
-	}
-
-};
-
-app.Game.init();
 
 app.Views.InitialView = function(game) {
 	this.game = game;
@@ -300,3 +290,26 @@ app.Views.InitialView.prototype = {
 
 	}
 };
+
+app.Game = {
+
+	game: null,
+
+	init: function() {
+		this.game = new Phaser.Game(500, 340, Phaser.AUTO, 'test', null, true, false);
+		this.addGameStates();
+		this.startGame();
+	},
+
+	addGameStates: function() {
+		var initialView = new app.Views.InitialView(this.game);
+		this.game.state.add('start', initialView);
+	},
+
+	startGame: function() {
+		this.game.state.start('start');
+	}
+
+};
+
+app.Game.init();

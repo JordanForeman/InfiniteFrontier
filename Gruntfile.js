@@ -21,7 +21,16 @@ module.exports = function(grunt) {
 
 		concat: {
 			dist: {
-				src: ['public/js/**/*.js', '!public/js/build/*.js'],
+				src: [
+					'public/js/core.js',
+					'public/js/client/*.js',
+					'public/js/entities/*.js',
+					'public/js/const.js',
+					'public/js/Controller.js',
+					'public/js/events/*.js',
+					'public/js/views/*.js',
+					'public/js/game.js'
+				],
 				dest: 'public/js/build/<%= pkg.name %>-<%= pkg.version %>.js'
 			}
 		}
