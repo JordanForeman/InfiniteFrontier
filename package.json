@@ -1,5 +1,5 @@
 {
-  "name": "InfiniteFrontier",
+  "name": "infinite-frontier",
   "version": "0.0.0",
   "description": "Sci-Fi MMORPG for Desktop Browsers",
   "main": "server.js",
@@ -13,5 +13,8 @@
     "grunt-contrib-concat": "^0.5.0",
     "grunt-contrib-watch": "^0.6.1",
     "grunt-contrib-uglify": "^0.6.0"
+  },
+  "dependencies": {
+    "socket.io": "~1.2.1"
   }
 }
