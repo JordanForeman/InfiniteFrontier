@@ -7,6 +7,8 @@ app.Views.InitialView = function(game) {
 	this.physicsBodies = [];
 	this.nextFire = 0;
 
+	this.InstanceManager = new app.Client.InstanceManager();
+
 	this.gameBounds = {
 		height: 2048,
 		width: 1024

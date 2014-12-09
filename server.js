@@ -47,6 +47,7 @@ var server = http.createServer(function(req, res) {
 });
 
 var port = 3000;
+	MessageHandler = require('./net/MessageHandler')(server);
 server.listen(port, function() {
 	console.log('server listening on port ' + port);
 });
